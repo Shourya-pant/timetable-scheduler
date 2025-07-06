@@ -141,21 +141,32 @@ const Signup: React.FC = () => {
           {/* Header */}
           <div className="text-center">
             <Link to="/" className="inline-block mb-6">
-              <div className="w-16 h-16 mx-auto bg-primary-600 rounded-full flex items-center justify-center shadow-lg hover-scale transition-all">
-                <svg
-                  className="w-8 h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
+              <div className="flex items-center justify-center space-x-3">
+                <img 
+                  src="/logo.png" 
+                  alt="University Timetable Scheduler" 
+                  className="h-12 w-auto"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
+                />
+                <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center shadow-lg hover-scale transition-all">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
               </div>
             </Link>
             

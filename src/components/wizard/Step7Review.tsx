@@ -89,11 +89,11 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
   };
 
   const getValidationSummary = () => {
-    const issues = [];
-    const warnings = [];
+    const issues: string[] = [];
+    const warnings: string[] = [];
 
     // Check for potential scheduling conflicts
-    const teacherWorkload = {};
+    const teacherWorkload: { [key: number]: number } = {};
     data.assignments.forEach(assignment => {
       const course = data.courses.find(c => c.id === assignment.course_id);
       if (course) {
@@ -108,13 +108,13 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
     // Check teacher overload
     Object.entries(teacherWorkload).forEach(([teacherId, hours]) => {
       const teacher = data.teachers.find(t => t.id === parseInt(teacherId));
-      if (teacher && hours > teacher.max_hours_per_day * 5) {
-        warnings.push(`${teacher.name} may be overloaded (${Math.round(hours)} hours/week)`);
+      if (teacher && (hours as number) > teacher.max_hours_per_day * 5) {
+        warnings.push(`${teacher.name} may be overloaded (${Math.round(hours as number)} hours/week)`);
       }
     });
 
     // Check room capacity vs demand
-    const roomTypeNeeds = {};
+    const roomTypeNeeds: { [key: string]: number } = {};
     data.courses.forEach(course => {
       if (!roomTypeNeeds[course.room_type]) {
         roomTypeNeeds[course.room_type] = 0;
@@ -123,7 +123,7 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
       roomTypeNeeds[course.room_type] += courseAssignments.length * course.sessions_per_week;
     });
 
-    const roomTypeSupply = {};
+    const roomTypeSupply: { [key: string]: number } = {};
     data.classrooms.forEach(classroom => {
       if (!roomTypeSupply[classroom.room_type]) {
         roomTypeSupply[classroom.room_type] = 0;
@@ -133,7 +133,7 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
 
     Object.entries(roomTypeNeeds).forEach(([roomType, need]) => {
       const supply = roomTypeSupply[roomType] || 0;
-      if (need > supply * 0.8) { // Warning at 80% capacity
+      if ((need as number) > supply * 0.8) { // Warning at 80% capacity
         warnings.push(`${roomType} rooms may be in high demand (${need} sessions needed)`);
       }
     });
@@ -146,6 +146,41 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Data Check Notice */}
+      {summary.sections === 0 || summary.teachers === 0 || summary.courses === 0 || summary.classrooms === 0 || summary.assignments === 0 ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-medium text-red-800">Missing Required Data</h3>
+              <p className="text-sm text-red-700 mt-1">
+                To generate a timetable, you need data in all steps. Please go back to the previous steps and add some data, or use the "Load Sample Data" button in the top toolbar to get started quickly.
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-medium text-green-800">Ready for Timetable Generation</h3>
+              <p className="text-sm text-green-700 mt-1">
+                All required data is present. Enter a timetable name below and click "Generate Timetable" to proceed.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex">
@@ -201,7 +236,7 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
         <h3 className="text-lg font-medium text-gray-900 mb-4">Configuration Summary</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary-600">{summary.sections}</div>
+            <div className="text-3xl font-bold text-blue-600">{summary.sections}</div>
             <div className="text-sm text-gray-600">Sections</div>
           </div>
           <div className="text-center">
@@ -374,8 +409,18 @@ const Step7Review: React.FC<Step7ReviewProps> = ({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!timetableName.trim() || isLoading || isGenerating || validation.issues.length > 0}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            disabled={
+              !timetableName.trim() || 
+              isLoading || 
+              isGenerating || 
+              validation.issues.length > 0 ||
+              summary.sections === 0 || 
+              summary.teachers === 0 || 
+              summary.courses === 0 || 
+              summary.classrooms === 0 || 
+              summary.assignments === 0
+            }
+            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading || isGenerating ? (
               <>

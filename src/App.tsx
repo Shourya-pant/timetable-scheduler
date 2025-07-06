@@ -1,16 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute.tsx';
+import ProtectedRoute from './components/ProtectedRoute';
 
 // Import pages
-import Landing from './pages/Landing.tsx';
-import Login from './pages/Login.tsx';
-import Signup from './pages/Signup.tsx';
-import AdminDashboard from './pages/AdminDashboard.tsx';
-import DeptDashboard from './pages/DeptDashboard.tsx';
-import CreateTimetable from './pages/CreateTimetable.tsx';
-import Results from './pages/Results.tsx';
+import Landing from './pages/Landing';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import AdminDashboard from './pages/AdminDashboard';
+import DeptDashboard from './pages/DeptDashboard';
+import CreateTimetable from './pages/CreateTimetable';
+import Results from './pages/Results';
 
 // Import styles
 import './App.css';

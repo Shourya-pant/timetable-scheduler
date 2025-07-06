@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
+import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 
 // Base API URL configuration
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 // API Response Types
 export interface ApiResponse<T = any> {
@@ -211,15 +211,12 @@ const apiClient: AxiosInstance = axios.create({
 
 // Request interceptor for adding auth token
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config) => {
     // Get token from localStorage
     const token = localStorage.getItem('access_token');
     
-    if (token) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${token}`,
-      };
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     // Log request in development
@@ -246,7 +243,7 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as any & { _retry?: boolean };
     
     // Handle 401 Unauthorized errors
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -303,8 +300,8 @@ apiClient.interceptors.response.use(
       throw new Error('Network error. Please check your internet connection.');
     }
     
-    // Handle other HTTP errors
-    const errorMessage = error.response.data?.message || 
+    // Handle other HTTP errors  
+    const errorMessage = (error.response.data as any)?.message || 
                         error.response.statusText || 
                         'An unexpected error occurred';
     

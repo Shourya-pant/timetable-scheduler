@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api, handleApiError } from '../utils/api';
+import Header from '../components/Header';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -41,7 +42,6 @@ interface TimetableResults {
 const Results: React.FC = () => {
   const { timetableId } = useParams<{ timetableId: string }>();
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
 
   // State
   const [results, setResults] = useState<TimetableResults | null>(null);
@@ -65,13 +65,7 @@ const Results: React.FC = () => {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
   // Load timetable results
-  useEffect(() => {
-    if (timetableId) {
-      loadTimetableResults();
-    }
-  }, [timetableId]);
-
-  const loadTimetableResults = async () => {
+  const loadTimetableResults = useCallback(async () => {
     if (!timetableId) return;
 
     try {
@@ -79,7 +73,7 @@ const Results: React.FC = () => {
       setError('');
 
       const response = await api.dept.getTimetableResults(parseInt(timetableId));
-      if (response.data.success) {
+      if (response.data.success && response.data.data) {
         setResults(response.data.data);
       } else {
         setError(response.data.message || 'Failed to load timetable results');
@@ -89,7 +83,13 @@ const Results: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [timetableId]);
+
+  useEffect(() => {
+    if (timetableId) {
+      loadTimetableResults();
+    }
+  }, [timetableId, loadTimetableResults]);
 
   const getDayName = (dayIndex: number): string => {
     return days[dayIndex] || 'Unknown';
@@ -138,7 +138,7 @@ const Results: React.FC = () => {
   };
 
   const renderSectionView = () => {
-    const sectionSlots = {};
+    const sectionSlots: { [key: string]: ScheduledSlot[] } = {};
     getFilteredSlots().forEach(slot => {
       if (!slot.section_code) return;
       
@@ -154,7 +154,7 @@ const Results: React.FC = () => {
           <div key={sectionCode} className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900">Section {sectionCode}</h3>
-              <p className="text-sm text-gray-600">{(slots as ScheduledSlot[]).length} scheduled sessions</p>
+              <p className="text-sm text-gray-600">{slots.length} scheduled sessions</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -168,7 +168,7 @@ const Results: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {(slots as ScheduledSlot[]).map((slot, index) => (
+                  {slots.map((slot, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {slot.course_name}
@@ -197,7 +197,7 @@ const Results: React.FC = () => {
   };
 
   const renderTeacherView = () => {
-    const teacherSlots = {};
+    const teacherSlots: { [key: string]: ScheduledSlot[] } = {};
     getFilteredSlots().forEach(slot => {
       if (!slot.teacher_name) return;
       
@@ -213,7 +213,7 @@ const Results: React.FC = () => {
           <div key={teacherName} className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900">{teacherName}</h3>
-              <p className="text-sm text-gray-600">{(slots as ScheduledSlot[]).length} scheduled sessions</p>
+              <p className="text-sm text-gray-600">{slots.length} scheduled sessions</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -227,7 +227,7 @@ const Results: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {(slots as ScheduledSlot[]).map((slot, index) => (
+                  {slots.map((slot, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {slot.course_name}
@@ -256,7 +256,7 @@ const Results: React.FC = () => {
   };
 
   const renderClassroomView = () => {
-    const roomSlots = {};
+    const roomSlots: { [key: string]: ScheduledSlot[] } = {};
     getFilteredSlots().forEach(slot => {
       if (!slot.room_id) return;
       
@@ -272,7 +272,7 @@ const Results: React.FC = () => {
           <div key={roomId} className="bg-white rounded-lg shadow overflow-hidden">
             <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
               <h3 className="text-lg font-medium text-gray-900">Room {roomId}</h3>
-              <p className="text-sm text-gray-600">{(slots as ScheduledSlot[]).length} scheduled sessions</p>
+              <p className="text-sm text-gray-600">{slots.length} scheduled sessions</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -286,7 +286,7 @@ const Results: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {(slots as ScheduledSlot[]).map((slot, index) => (
+                  {slots.map((slot, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {slot.course_name}
@@ -318,7 +318,7 @@ const Results: React.FC = () => {
     const filteredSlots = getFilteredSlots();
     
     // Create a grid mapping for slots
-    const slotGrid = {};
+    const slotGrid: { [key: string]: ScheduledSlot[] } = {};
     filteredSlots.forEach(slot => {
       const timeSlot = getTimeSlot(slot.start_time);
       const key = `${slot.day_of_week}-${timeSlot}`;
@@ -531,56 +531,38 @@ const Results: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{results.timetable.name}</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {results.timetable.department} Department | {results.scheduled_slots.length} scheduled sessions
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={exportToPDF}
-                disabled={isExporting}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
-                {isExporting ? (
-                  <>
-                    <div className="spinner h-4 w-4 mr-2"></div>
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Export PDF
-                  </>
-                )}
-              </button>
-              <Link
-                to={user?.role === 'admin' ? '/admin/dashboard' : '/dept/dashboard'}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+      {/* Header with Logo */}
+      <Header 
+        title={results.timetable.name}
+        subtitle={`${results.timetable.department} Department | ${results.scheduled_slots.length} scheduled sessions`}
+        showBackButton={true}
+        backUrl={user?.role === 'admin' ? '/admin/dashboard' : '/dept/dashboard'}
+      />
+
+      {/* Action Bar */}
+      <div className="bg-white border-b border-gray-200 px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-end">
+          <button
+            onClick={exportToPDF}
+            disabled={isExporting}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {isExporting ? (
+              <>
+                <div className="spinner h-4 w-4 mr-2"></div>
+                Exporting...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-              </Link>
-              <button
-                onClick={logout}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>
+                Export PDF
+              </>
+            )}
+          </button>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Status and Stats */}

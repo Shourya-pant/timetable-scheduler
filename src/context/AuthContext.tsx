@@ -53,7 +53,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Base API URL
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -203,10 +203,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     
     try {
+      console.log('Login attempt:', { email, API_BASE_URL });
       const response = await axios.post(`${API_BASE_URL}/auth/login`, {
         email,
         password,
       });
+
+      console.log('Login response:', response.status, response.data);
 
       if (response.data.success) {
         const authData: AuthResponse = response.data.data;
@@ -229,6 +232,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, message: response.data.message || 'Login failed' };
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       const message = error.response?.data?.message || 'Login failed. Please try again.';
       return { success: false, message };
     } finally {
@@ -241,7 +245,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsLoading(true);
     
     try {
+      console.log('Signup attempt:', { userData, API_BASE_URL });
       const response = await axios.post(`${API_BASE_URL}/auth/signup`, userData);
+
+      console.log('Signup response:', response.status, response.data);
 
       if (response.data.success) {
         const authData: AuthResponse = response.data.data;
@@ -264,6 +271,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return { success: false, message: response.data.message || 'Signup failed' };
       }
     } catch (error: any) {
+      console.error('Signup error:', error);
       const message = error.response?.data?.message || 'Signup failed. Please try again.';
       return { success: false, message };
     } finally {

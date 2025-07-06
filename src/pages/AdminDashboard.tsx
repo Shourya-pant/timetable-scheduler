@@ -2,31 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { api, handleApiError } from '../utils/api';
+import Header from '../components/Header';
 
 interface DashboardStats {
-  overview: {
-    total_departments: number;
-    total_timetables: number;
-    active_timetables: number;
-    total_teachers: number;
-    total_courses: number;
-    total_classrooms: number;
-    total_scheduled_slots: number;
-    global_slots: number;
-  };
-  department_statistics: Record<string, {
-    timetables: number;
-    teachers: number;
-    courses: number;
-    classrooms: number;
-  }>;
-  global_scheduler: {
-    total_global_slots: number;
-    departments_with_timetables: number;
-    shared_resources: number;
-    department_slot_counts: Record<string, number>;
-    resource_utilization: Record<string, number>;
-  };
+  overview: Record<string, number>;
+  department_statistics: Record<string, any>;
+  global_scheduler: Record<string, any>;
 }
 
 interface Department {
@@ -78,7 +59,7 @@ const AdminDashboard: React.FC = () => {
   const loadDashboardData = async () => {
     try {
       const response = await api.admin.getDashboard();
-      if (response.data.success) {
+      if (response.data.success && response.data.data) {
         setDashboardStats(response.data.data);
       } else {
         setError('Failed to load dashboard data');
@@ -93,7 +74,7 @@ const AdminDashboard: React.FC = () => {
   const loadDepartments = async () => {
     try {
       const response = await api.admin.getDepartments();
-      if (response.data.success) {
+      if (response.data.success && response.data.data) {
         setDepartments(response.data.data);
       } else {
         setError('Failed to load departments');
@@ -131,7 +112,7 @@ const AdminDashboard: React.FC = () => {
 
     try {
       const response = await api.admin.detectConflicts();
-      if (response.data.success) {
+      if (response.data.success && response.data.data) {
         setConflicts(response.data.data.conflicts);
         setSuccessMessage(
           response.data.data.conflicts.length === 0
@@ -166,29 +147,11 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-sm text-gray-500 mt-1">
-                Welcome back, {user?.name} | System Administrator
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={logout}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header with Logo */}
+      <Header 
+        title="Admin Dashboard"
+        subtitle={`Welcome back, ${user?.name} | System Administrator`}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Status Messages */}
